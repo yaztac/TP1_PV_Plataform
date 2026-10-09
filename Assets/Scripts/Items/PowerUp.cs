@@ -15,7 +15,7 @@ public class PowerUp : MonoBehaviour
                 player.SpeedBoost(speedMultiplier, duration);
             }
 
-            // Oculta/Destruye el objeto recolectable
+            
             Destroy(gameObject);
         }
     }
