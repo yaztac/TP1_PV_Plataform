@@ -7,12 +7,14 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float rotationSpeed;
 
     [SerializeField] private float jumpForce;
-    [SerializeField] private GroundSensor groundSensor;
-    
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private Vector3 boxSize = new Vector3(0.8f, 0.2f, 0.8f); // Tamaño de la caja de detección
+    [SerializeField] private LayerMask groundLayer;
+
 
     private Rigidbody rb;
-    private float verticalImput;
-    private float horizontalInput;
+    private Vector3 moveDirection;
+    private bool isGrounded;
 
     private float baseSpeed;
     private Coroutine speedBoostCoroutine;
@@ -23,13 +25,20 @@ public class PlayerMovement : MonoBehaviour
         baseSpeed = speed;
     }
 
-    // Update is called once per frame
+    
     void Update()
     {
-        verticalImput = Input.GetAxis("Vertical");
-        horizontalInput = Input.GetAxis("Horizontal");
+        float horizontal = Input.GetAxis("Vertical");
+        float vertical = Input.GetAxis("Horizontal");
 
-        if (Input.GetButtonDown("Jump") && groundSensor != null && groundSensor.IsGrounded)
+        moveDirection = new Vector3(vertical, 0f, horizontal).normalized;
+
+        if(groundCheck != null)
+        {
+            isGrounded = Physics.OverlapBox(groundCheck.position, boxSize / 2f, Quaternion.identity, groundLayer).Length > 0;
+        }
+
+        if (Input.GetButtonDown("Jump") && isGrounded)
         {
             Jump();
         }
@@ -38,23 +47,23 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         MovePlayer();
-        RotatePlayer();
+  
     }
 
     private void MovePlayer()
     {
-        Vector3 direction = transform.forward * verticalImput * speed * Time.fixedDeltaTime;
-        rb.MovePosition(rb.position + direction);
+        if (moveDirection.magnitude >= 0.1f)
+        {
+            Vector3 targetPosition = rb.position + moveDirection * speed * Time.fixedDeltaTime;
+            rb.MovePosition(targetPosition);
+
+        }
     }
     
-    private void RotatePlayer()
-    {
-        float rotation = horizontalInput * rotationSpeed * Time.fixedDeltaTime;
-        rb.MoveRotation(rb.rotation * Quaternion.Euler(0f, rotation, 0f));
-    }
-
+   
     private void Jump()
     {
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
     }
 
