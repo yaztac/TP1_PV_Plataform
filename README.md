@@ -45,4 +45,86 @@ El terreno del juego tiene dos tipos de plataformas, unas fijas y otras moviles,
 ## 🛠️ Versión de Unity
 * **Unity 6 LTS** (Versión utilizada: `6000.5.8f1`)
 * **Pipeline de Renderizado:** Universal Render Pipeline (URP) *
+
+## 🛠️ Gridbox Lite
+* **Asset de la Asset Store de Unity
+* Se utilizó este asset para crear los materiales utilizados
 ---
+## 📝 Explicación Técnica de Codigo: 
+
+### 1. Manejo de Player (`IEnumerator`)
+
+* **Script:** `PlayerMovement.cs` 
+* **Funcionamiento:** Se utilizó un Rigidbody para gestionar el movimiento, y se implemento una corrutina para aumentar la velocidad temporalmente.
+```csharp
+      private IEnumerator SpeedBoostCoroutine(float boostAmount, float duration)
+    {
+        speed += boostAmount;
+        yield return new WaitForSeconds(duration);
+        speed = baseSpeed;
+        speedBoostCoroutine = null;
+    }
+```
+### 2. Colisiones del Player con Objetos (`OnTriggerenter`)
+
+* **Script:** `CoinCollision.cs`
+* **Funcionamiento:** Se utilizó OnTriggerEnter para detectar las colisiones del Player con las monedas y tambien con los PowerUps.
+```csharp
+ private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            if (CoinManager.Instance != null)
+            {
+                Debug.Log("Moneda recogida");
+                CoinManager.Instance.CollectCoin();
+            }
+
+            Destroy(gameObject);
+        }
+    }
+```
+### 3. Conteo de monedas (`FindObjectsWithTag`)
+
+* **Script:** `CoinManager.cs`
+* **Funcionamiento:** Se utilizó FindObjectsWithTag para contar las monedas que hay en escena y poder señalar por consola cuando el Player recoja todas.
+```csharp
+ totalCoins = GameObject.FindGameObjectsWithTag("Coin").Length;
+        coinCount = 0;
+        Debug.Log("Monedas en escena: " + totalCoins);
+```
+### 4. Plataformas moviles (`InvokeRepeating`)
+
+* **Script principal:** `MovingPlatforrm.cs` 
+* **Funcionamiento:** Se utilizó `InvokeRepeating` para mover las plataformas entre dos puntos. 
+```csharp  
+private void Start() {
+  InvokeRepeating(nameof(SwitchDirection), switchInterval, switchInterval); 
+ }
+```
+### 5. Obstaculos proyectiles (`InvokeRepeating` y `Instantiate`)
+
+* **Script:** `ObstacleSpawner.cs`
+* **Funcionamiento:** Se utilizó `InvokeRepeating` y `Instantiate` para tener unos obtaculos (esferas) que se instancian cada 2 segundos desde un punto fijo a los costados de una plataforma.
+```csharp
+ void Start()
+    {
+        InvokeRepeating(nameof(SpawnObstacle), initialDelay, spawnInterval);
+    }
+
+    private void SpawnObstacle()
+    {
+        Instantiate(obstaclePrefab, transform.position, transform.rotation);
+    }
+```
+### 6. Objeto transportable (`SetParent`)
+
+* **Script:** `PickItem.cs`
+* **Funcionamiento:** Se utilizó `SetParent` para que el Player pueda tomar un cubo y transportarlo a la meta, en la meta solo gana si llega con el cubo.
+```csharp
+ private void Pick(GameObject item)
+    {
+        currentItem = item;
+
+        item.transform.SetParent(hand);
+```
