@@ -19,6 +19,13 @@ public class PlayerMovement : MonoBehaviour
     private float baseSpeed;
     private Coroutine speedBoostCoroutine;
 
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        rb.sleepThreshold = 0f;
+        
+    }
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -33,7 +40,7 @@ public class PlayerMovement : MonoBehaviour
 
         moveDirection = new Vector3(vertical, 0f, horizontal).normalized;
 
-        if(groundCheck != null)
+        if (groundCheck != null)
         {
             isGrounded = Physics.OverlapBox(groundCheck.position, boxSize / 2f, Quaternion.identity, groundLayer).Length > 0;
         }
@@ -47,20 +54,24 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         MovePlayer();
-  
+        
     }
 
     private void MovePlayer()
     {
         if (moveDirection.magnitude >= 0.1f)
         {
+            // Mueve la posición del Rigidbody
             Vector3 targetPosition = rb.position + moveDirection * speed * Time.fixedDeltaTime;
             rb.MovePosition(targetPosition);
 
+            // Rota suavemente la cápsula hacia la dirección en la que avanza
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
         }
     }
     
-   
+  
     private void Jump()
     {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
